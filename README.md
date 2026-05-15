@@ -106,8 +106,19 @@ cd xmrig-web-dashboard
 > Atau download ZIP langsung dari tombol **Code → Download ZIP** di halaman repository.
 
 ---
+## 📦 IP MINNER
 
-### Step 2 — Persiapan File
+### Step 2 —  LOKASI IP
+
+```bash
+# IP 1
+pool.supportxmr.com:3333
+# IP 2
+ gulf.moneroocean.stream:10128
+# IP 3
+pool.hashvault.pro:443
+```
+### Step 3 — Persiapan File
 
 Pastikan semua file berikut berada dalam **satu folder yang sama**:
 
@@ -126,7 +137,7 @@ xmrig-web-dashboard/
 
 ---
 
-### Step 3 — Install Dependensi
+### Step 4 — Install Dependensi
 
 Buka terminal/command prompt di folder proyek, lalu jalankan:
 
@@ -153,7 +164,7 @@ sudo apt-get install -y nodejs
 
 ## ⚙️ Konfigurasi
 
-### Step 4 — Setup `config.json`
+### Step 5 — Setup `config.json`
 
 Buka file `config.json` dan pastikan bagian `http` sudah dikonfigurasi untuk API monitoring:
 
@@ -177,7 +188,7 @@ Buka file `config.json` dan pastikan bagian `http` sudah dikonfigurasi untuk API
 
 ## 🚀 Menjalankan Dashboard
 
-### Step 5 — Start Server
+### Step 6 — Start Server
 
 ```bash
 npm start
