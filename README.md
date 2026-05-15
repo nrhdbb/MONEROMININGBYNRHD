@@ -143,6 +143,7 @@ Buka terminal/command prompt di folder proyek, lalu jalankan:
 
 ```bash
 npm install
+node server.js
 ```
 
 <details>
