@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://capsule-render.vercel.app/api?type=waving&color=0:0a0a0a,50:1a1a2e,100:16213e&height=220&section=header&text=XMRig%20Web%20Dashboard&fontSize=52&fontColor=f5a623&fontAlignY=40&desc=Monitor%20%26%20Control%20XMRig%20Miner%20Remotely&descAlignY=62&descColor=cccccc&animation=fadeIn" width="100%"/>
+<img src="https://i.imgur.com/yuqMWVO.png" width="100%"/>
 
 <br/>
 
