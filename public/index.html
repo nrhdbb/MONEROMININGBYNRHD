@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XMRig Web Dashboard V2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .terminal {
+            background: #000;
+            color: #00ff00;
+            font-family: 'Courier New', Courier, monospace;
+            padding: 10px;
+            height: 300px;
+            overflow-y: auto;
+            border-radius: 8px;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen">
+    <nav class="bg-gray-800 border-b border-gray-700 p-4 sticky top-0 z-50">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-orange-500 flex items-center gap-2">
+                <span class="bg-orange-500 text-white p-1 rounded">X</span>
+                XMRig <span class="text-white font-light">Web Dashboard</span>
+            </h1>
+            <div class="flex items-center space-x-4">
+                <div id="status-badge" class="px-3 py-1 rounded-full text-xs font-semibold bg-red-500">Offline</div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto p-6 space-y-6">
+        <!-- Configuration & Controls -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-lg space-y-4">
+                <h3 class="text-lg font-semibold text-orange-400">Mining Configuration</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">Monero Wallet Address</label>
+                        <input id="wallet-input" type="text" placeholder="Enter XMR address" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-sm focus:border-orange-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">Mining Pool URL</label>
+                        <input id="pool-input" type="text" placeholder="e.g. gulf.moneroocean.stream:10128" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-sm focus:border-orange-500 outline-none">
+                    </div>
+                </div>
+                <div class="flex gap-2 pt-2">
+                    <button id="save-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-semibold transition">Save Config</button>
+                    <button id="start-btn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm font-semibold transition">Start Mining</button>
+                    <button id="stop-btn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm font-semibold transition hidden">Stop Mining</button>
+                </div>
+            </div>
+
+            <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-lg space-y-4">
+                <h3 class="text-lg font-semibold text-orange-400">Quick Stats</h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-400">Current Hashrate</span>
+                        <span id="hashrate-main" class="text-xl font-bold">0.0 H/s</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-400">Shares (A/R)</span>
+                        <span class="font-bold text-green-400"><span id="accepted">0</span> <span class="text-gray-500">/</span> <span id="rejected" class="text-red-400">0</span></span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-400">Uptime</span>
+                        <span id="uptime" class="font-bold">0s</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Terminal & History -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-lg">
+                <h3 class="text-lg font-semibold mb-4 text-orange-400">Terminal Output</h3>
+                <div id="terminal" class="terminal">
+                    Waiting for mining to start...
+                </div>
+            </div>
+            <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-lg">
+                <h3 class="text-lg font-semibold mb-4 text-orange-400">Hashrate History</h3>
+                <div class="h-64">
+                    <canvas id="hashrateChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Info -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6">
+            <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-lg">
+                <h3 class="text-lg font-semibold mb-4 text-orange-400">System Info</h3>
+                <div class="space-y-2 text-sm">
+                    <div class="flex justify-between border-b border-gray-700 pb-2">
+                        <span>CPU Brand</span>
+                        <span id="cpu-info">-</span>
+                    </div>
+                    <div class="flex justify-between border-b border-gray-700 pb-2">
+                        <span>Algorithm</span>
+                        <span id="algo">-</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>XMRig Version</span>
+                        <span id="version">-</span>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-lg">
+                <h3 class="text-lg font-semibold mb-4 text-orange-400">Connection Info</h3>
+                <div class="space-y-2 text-sm">
+                    <div class="flex justify-between border-b border-gray-700 pb-2">
+                        <span>Active Pool</span>
+                        <span id="pool">-</span>
+                    </div>
+                    <div class="flex justify-between border-b border-gray-700 pb-2">
+                        <span>Total Hashes</span>
+                        <span id="total-hashes">0</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Worker ID</span>
+                        <span id="worker-id">web-worker</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const hashrateCtx = document.getElementById('hashrateChart').getContext('2d');
+        const hashrateData = {
+            labels: [],
+            datasets: [{
+                label: 'Hashrate (H/s)',
+                data: [],
+                borderColor: '#f97316',
+                backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            }]
+        };
+
+        const chart = new Chart(hashrateCtx, {
+            type: 'line',
+            data: hashrateData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#374151' } },
+                    x: { grid: { display: false } }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        async function updateStats() {
+            try {
+                const res = await fetch('/api/status');
+                const data = await res.json();
+
+                const startBtn = document.getElementById('start-btn');
+                const stopBtn = document.getElementById('stop-btn');
+
+                if (data.isRunning) {
+                    startBtn.classList.add('hidden');
+                    stopBtn.classList.remove('hidden');
+                } else {
+                    startBtn.classList.remove('hidden');
+                    stopBtn.classList.add('hidden');
+                }
+
+                if (data.error && !data.hashrate) {
+                    document.getElementById('status-badge').innerText = 'Ready';
+                    document.getElementById('status-badge').className = 'px-3 py-1 rounded-full text-xs font-semibold bg-blue-500';
+                } else if (data.hashrate) {
+                    document.getElementById('status-badge').innerText = 'Mining';
+                    document.getElementById('status-badge').className = 'px-3 py-1 rounded-full text-xs font-semibold bg-green-500';
+                    
+                    const hr = data.hashrate.total;
+                    document.getElementById('hashrate-main').innerText = `${hr[0]} H/s`;
+                    document.getElementById('total-hashes').innerText = data.results.hashes_total;
+                    document.getElementById('uptime').innerText = formatUptime(data.uptime);
+                    
+                    document.getElementById('cpu-info').innerText = data.cpu.brand;
+                    document.getElementById('algo').innerText = data.algo;
+                    document.getElementById('version').innerText = data.version;
+                    document.getElementById('pool').innerText = data.connection.pool;
+                    document.getElementById('accepted').innerText = data.results.shares_good || data.results.accepted || 0;
+                    document.getElementById('rejected').innerText = data.results.shares_bad || data.results.rejected || 0;
+
+                    const now = new Date().toLocaleTimeString();
+                    hashrateData.labels.push(now);
+                    hashrateData.datasets[0].data.push(hr[0]);
+                    if (hashrateData.labels.length > 20) {
+                        hashrateData.labels.shift();
+                        hashrateData.datasets[0].data.shift();
+                    }
+                    chart.update();
+                }
+
+                // Update Terminal Logs
+                const logsRes = await fetch('/api/logs');
+                const logsData = await logsRes.json();
+                const term = document.getElementById('terminal');
+                if (logsData.logs && logsData.logs.length > 0) {
+                    term.innerHTML = logsData.logs.join('<br>');
+                    term.scrollTop = term.scrollHeight;
+                }
+
+            } catch (err) {
+                document.getElementById('status-badge').innerText = 'Offline';
+                document.getElementById('status-badge').className = 'px-3 py-1 rounded-full text-xs font-semibold bg-red-500';
+            }
+        }
+
+        document.getElementById('save-btn').onclick = async () => {
+            const wallet = document.getElementById('wallet-input').value;
+            const pool = document.getElementById('pool-input').value;
+            const res = await fetch('/api/config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ wallet, pool })
+            });
+            const data = await res.json();
+            alert(data.message || data.error);
+        };
+
+        document.getElementById('start-btn').onclick = async () => {
+            const res = await fetch('/api/start', { method: 'POST' });
+            const data = await res.json();
+            if (data.error) alert(data.error);
+        };
+
+        document.getElementById('stop-btn').onclick = async () => {
+            await fetch('/api/stop', { method: 'POST' });
+        };
+
+        function formatUptime(seconds) {
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = seconds % 60;
+            return `${h}h ${m}m ${s}s`;
+        }
+
+        setInterval(updateStats, 2000);
+
+        // Load config on page load
+        window.onload = async () => {
+            try {
+                const res = await fetch('/api/config');
+                const data = await res.json();
+                if (data.wallet) document.getElementById('wallet-input').value = data.wallet;
+                if (data.pool) document.getElementById('pool-input').value = data.pool;
+            } catch (err) {
+                console.error('Gagal memuat konfigurasi:', err);
+            }
+            updateStats();
+        };
+    </script>
+</body>
+</html>
